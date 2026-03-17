@@ -278,7 +278,7 @@ export default function Home() {
 
               <div className="flex gap-2">
                 <input
-                  className="flex-1 bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm font-medium placeholder-gray-300 outline-none focus:ring-2 ring-accent/20 transition-all"
+                  className="flex-1 bg-gray-50 border-none rounded-2xl px-5 py-4 text-base font-medium placeholder-gray-300 outline-none focus:ring-2 ring-accent/20 transition-all"
                   placeholder="What's on your mind?"
                   value={input}
                   onChange={e => setInput(e.target.value)}
@@ -312,7 +312,7 @@ export default function Home() {
                     {editingDiaryId === e.id ? (
                       <div className="flex flex-col gap-2">
                         <textarea
-                          className="w-full bg-white border border-accent/20 rounded-xl p-3 text-sm font-medium outline-none h-24"
+                          className="w-full bg-white border border-accent/20 rounded-xl p-3 text-base font-medium outline-none h-24"
                           value={editingDiaryText}
                           onChange={ev => setEditingDiaryText(ev.target.value)}
                           autoFocus
@@ -366,7 +366,7 @@ export default function Home() {
               
               <div className="flex gap-2">
                 <input
-                  className="flex-1 bg-gray-50 border-none rounded-2xl px-5 py-3.5 text-sm font-medium outline-none"
+                  className="flex-1 bg-gray-50 border-none rounded-2xl px-5 py-3.5 text-base font-medium outline-none"
                   placeholder="Note a moment..."
                   value={diaryInput}
                   onChange={e => setDiaryInput(e.target.value)}
@@ -427,7 +427,7 @@ export default function Home() {
               
               <div className="flex gap-2">
                 <input
-                  className="flex-1 bg-gray-50 border-none rounded-2xl px-5 py-3.5 text-sm font-medium outline-none"
+                  className="flex-1 bg-gray-50 border-none rounded-2xl px-5 py-3.5 text-base font-medium outline-none"
                   placeholder="What's next?"
                   value={todoInput}
                   onChange={e => setTodoInput(e.target.value)}
@@ -501,7 +501,7 @@ export default function Home() {
               
               <div className="flex gap-2">
                 <input
-                  className="flex-1 bg-sky-50/40 border-none rounded-2xl px-5 py-4 text-sm font-medium placeholder-sky-200 outline-none ring-2 ring-transparent focus:ring-sky-100 transition-all"
+                  className="flex-1 bg-sky-50/40 border-none rounded-2xl px-5 py-4 text-base font-medium placeholder-sky-200 outline-none ring-2 ring-transparent focus:ring-sky-100 transition-all"
                   placeholder="What's on your mind? 💭"
                   value={maybeInput}
                   onChange={e => setMaybeInput(e.target.value)}
