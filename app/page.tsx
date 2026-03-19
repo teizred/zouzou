@@ -144,6 +144,28 @@ export default function Home() {
 
     setMessages(prev => [...prev, { role: 'assistant', content: clean }])
     setLoading(false)
+
+    // Si c'est le début d'une session, on génère un titre auto
+    if (newMessages.length === 1) {
+      try {
+        const sumRes = await fetch('/api/chat/summary', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: [...newMessages, { role: 'assistant', content: clean }] })
+        })
+        const { title } = await sumRes.json()
+        
+        await fetch(`/api/sessions?id=${currentSessionId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title })
+        })
+        
+        setSessions(prev => prev.map(s => s.id === currentSessionId ? { ...s, title } : s))
+      } catch (err) {
+        console.error("Failed to generate summary:", err)
+      }
+    }
   }
 
   const vote = async (id: string, val: 'yes' | 'no') => {
@@ -264,6 +286,22 @@ export default function Home() {
     setMaybeList(prev => prev.filter(m => m.id !== item.id))
   }
 
+  const removeSession = async (id: string) => {
+    setConfirmText('Effacer cette conversation ?')
+    setConfirmAction(() => async () => {
+      await fetch(`/api/sessions?id=${id}`, {
+        method: 'DELETE'
+      })
+      setSessions(prev => prev.filter(s => s.id !== id))
+      if (sessionId === id) {
+        setSessionId(null)
+        setMessages([])
+      }
+      setConfirmOpen(false)
+    })
+    setConfirmOpen(true)
+  }
+
   return (
     <main className="min-h-screen py-10 px-4 flex justify-center items-start">
       <div className="w-full max-w-lg flex flex-col gap-6">
@@ -305,6 +343,7 @@ export default function Home() {
               newSession={newSession}
               loadSession={loadSession}
               currentSessionId={sessionId}
+              removeSession={removeSession}
             />
           )}
           {tab === 'diary' && (

@@ -17,11 +17,12 @@ interface ChatTabProps {
   newSession: () => void
   loadSession: (id: string) => void
   currentSessionId: string | null
+  removeSession: (id: string) => void
 }
 
 export default function ChatTab({
   messages, loading, input, setInput, sendMessage,
-  sessions, showSessions, setShowSessions, newSession, loadSession, currentSessionId
+  sessions, showSessions, setShowSessions, newSession, loadSession, currentSessionId, removeSession
 }: ChatTabProps) {
   const bottomRef = useRef<HTMLDivElement>(null)
 
@@ -53,17 +54,34 @@ export default function ChatTab({
           {sessions.length === 0 ? (
             <p className="text-xs text-gray-400 text-center py-2">No history yet</p>
           ) : sessions.map(s => (
-            <button
+            <div
               key={s.id}
-              onClick={() => loadSession(s.id)}
-              className={`text-left px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+              className={`group flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                 s.id === currentSessionId
                   ? 'bg-accent text-white'
                   : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
               }`}
             >
-              {s.title}
-            </button>
+              <button
+                onClick={() => loadSession(s.id)}
+                className="flex-1 text-left"
+              >
+                {s.title}
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  removeSession(s.id)
+                }}
+                className={`p-2 rounded-xl transition-all ${
+                  s.id === currentSessionId ? 'text-white/70 hover:text-white' : 'text-gray-400 hover:text-red-400'
+                }`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="bold" viewBox="0 0 256 256">
+                  <path d="M216,48H176V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM96,40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96Zm96,168H64V64H192ZM112,104v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Z"></path>
+                </svg>
+              </button>
+            </div>
           ))}
         </div>
       )}

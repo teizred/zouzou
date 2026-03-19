@@ -22,3 +22,36 @@ export async function POST(req: NextRequest) {
   const session = await db.insert(sessions).values({ title }).returning()
   return NextResponse.json(session[0])
 }
+
+export async function DELETE(req: NextRequest) {
+  const { searchParams } = new URL(req.url)
+  const id = searchParams.get('id')
+
+  if (!id) {
+    return NextResponse.json({ error: 'Missing session id' }, { status: 400 })
+  }
+
+  // Supprime d'abord les messages liés
+  await db.delete(messages).where(eq(messages.sessionId, id))
+  // Puis la session
+  await db.delete(sessions).where(eq(sessions.id, id))
+
+  return NextResponse.json({ success: true })
+}
+
+export async function PATCH(req: NextRequest) {
+  const { searchParams } = new URL(req.url)
+  const id = searchParams.get('id')
+  const { title } = await req.json()
+
+  if (!id || !title) {
+    return NextResponse.json({ error: 'Missing id or title' }, { status: 400 })
+  }
+
+  const updated = await db.update(sessions)
+    .set({ title })
+    .where(eq(sessions.id, id))
+    .returning()
+
+  return NextResponse.json(updated[0])
+}
