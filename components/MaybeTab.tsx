@@ -34,7 +34,7 @@ export default function MaybeTab({
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-5">
-            {maybeList.map((m, idx) => {
+            {(maybeList || []).map((m, idx) => {
               const colors = [
                 'bg-sky-50 border-sky-100',
                 'bg-rose-50 border-rose-100',

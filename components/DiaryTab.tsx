@@ -34,7 +34,7 @@ export default function DiaryTab({
           <div className="flex flex-col items-center justify-center h-full text-center opacity-40">
             <p className="text-sm font-bold text-gray-400">Your story starts here 😁</p>
           </div>
-        ) : diary.map((e) => (
+        ) : (diary || []).map((e) => (
           <div key={e.id} className="p-5 rounded-3xl border border-gray-100 bg-gray-50/30 group relative transition-all">
             <span className="text-[10px] font-black uppercase text-accent tracking-tighter bg-accent-soft px-2 py-0.5 rounded-full mb-2 inline-block">
               {new Date(e.createdAt).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}

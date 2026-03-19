@@ -26,7 +26,7 @@ export default function TodoTab({
           <div className="flex flex-col items-center justify-center h-full text-center opacity-40">
             <p className="text-sm font-bold text-gray-400">Zero tasks, Full focus hein? 😏</p>
           </div>
-        ) : todos.map((t) => (
+        ) : (todos || []).map((t) => (
           <div key={t.id} className="flex flex-col p-4 rounded-2xl border border-gray-100 group gap-1">
             <div className="flex items-center gap-3">
               <div className={`w-3 h-3 rounded-full ${t.vote === 'yes' ? 'bg-teal-500' : t.vote === 'no' ? 'bg-rose-500' : 'bg-gray-200'}`}></div>

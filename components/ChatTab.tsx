@@ -53,7 +53,7 @@ export default function ChatTab({
         <div className="flex flex-col gap-2 mb-4 max-h-40 overflow-y-auto">
           {sessions.length === 0 ? (
             <p className="text-xs text-gray-400 text-center py-2">No history yet</p>
-          ) : sessions.map(s => (
+          ) : (sessions || []).map(s => (
             <div
               key={s.id}
               className={`group flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
