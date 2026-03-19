@@ -4,7 +4,9 @@ import { NextRequest, NextResponse } from 'next/server'
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 export async function POST(req: NextRequest) {
-  const { messages } = await req.json()
+  try {
+  const { messages: rawMessages } = await req.json()
+  const messages = rawMessages.map(({ role, content }: { role: string, content: string }) => ({ role, content }))
 
   const response = await client.messages.create({
     model: 'claude-haiku-4-5-20251001',
@@ -26,4 +28,8 @@ Never mention these tags in your visible response.`,
 
   const content = response.content[0].type === 'text' ? response.content[0].text : ''
   return NextResponse.json({ content })
+} catch (error) {
+    console.error(error)
+    return NextResponse.json({ content: "Oops, something went wrong!" }, { status: 500 })
+  }
 }
