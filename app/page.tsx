@@ -6,6 +6,7 @@ import DiaryTab from '@/components/DiaryTab'
 import TodoTab from '@/components/TodoTab'
 import MaybeTab from '@/components/MaybeTab'
 import ConfirmModal from '@/components/ConfirmModal'
+import { RefreshCwIcon } from 'lucide-react'
 
 type Message = { role: 'user' | 'assistant'; content: string }
 type DiaryEntry = { id: string; text: string; date: string; createdAt: string }
@@ -32,11 +33,13 @@ export default function Home() {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null)
   const [confirmText, setConfirmText] = useState('')
+  const [quote, setQuote] = useState<string>('')
 
   useEffect(() => {
     fetch('/api/diary').then(r => r.json()).then(setDiary)
     fetch('/api/todos').then(r => r.json()).then(setTodos)
     fetch('/api/maybe').then(r => r.json()).then(setMaybeList)
+    fetch('/api/quote').then(r => r.json()).then(data => setQuote(data.text))
     fetch('/api/sessions').then(r => r.json()).then((data: Session[]) => {
       setSessions(data)
       if (data.length > 0) {
@@ -100,7 +103,6 @@ export default function Home() {
 
     let currentSessionId = sessionId
 
-    // Crée une session si y'en a pas
     if (!currentSessionId) {
       const res = await fetch('/api/sessions', {
         method: 'POST',
@@ -145,7 +147,6 @@ export default function Home() {
     setMessages(prev => [...prev, { role: 'assistant', content: clean }])
     setLoading(false)
 
-    // Si c'est le début d'une session, on génère un titre auto
     if (newMessages.length === 1) {
       try {
         const sumRes = await fetch('/api/chat/summary', {
@@ -154,13 +155,11 @@ export default function Home() {
           body: JSON.stringify({ messages: [...newMessages, { role: 'assistant', content: clean }] })
         })
         const { title } = await sumRes.json()
-        
         await fetch(`/api/sessions?id=${currentSessionId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ title })
         })
-        
         setSessions(prev => prev.map(s => s.id === currentSessionId ? { ...s, title } : s))
       } catch (err) {
         console.error("Failed to generate summary:", err)
@@ -286,12 +285,21 @@ export default function Home() {
     setMaybeList(prev => prev.filter(m => m.id !== item.id))
   }
 
+  const refreshQuote = async () => {
+    setQuote('Refining your motivation...')
+    try {
+      const res = await fetch('/api/quote?force=true')
+      const data = await res.json()
+      setQuote(data.text)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   const removeSession = async (id: string) => {
     setConfirmText('Effacer cette conversation ?')
     setConfirmAction(() => async () => {
-      await fetch(`/api/sessions?id=${id}`, {
-        method: 'DELETE'
-      })
+      await fetch(`/api/sessions?id=${id}`, { method: 'DELETE' })
       setSessions(prev => prev.filter(s => s.id !== id))
       if (sessionId === id) {
         setSessionId(null)
@@ -311,6 +319,20 @@ export default function Home() {
           </div>
           <h1 className="text-2xl font-black text-foreground tracking-tight">Hi, Kenza</h1>
           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Personal Space</p>
+          {quote && (
+            <div className="mt-3 px-4 py-3 bg-accent/5 rounded-2xl max-w-sm relative group">
+              <p className="text-xs font-medium text-accent/80 leading-relaxed text-center italic">
+                "{quote}"
+              </p>
+              <button 
+                onClick={refreshQuote}
+                className="absolute -right-2 -top-2 p-1.5 bg-white shadow-sm border border-gray-100 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110 active:scale-95"
+                title="Refresh quote"
+              >
+                <RefreshCwIcon size={12} className="text-accent" />
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="bento-card p-1.5 rounded-2xl flex gap-1 bg-white/50 backdrop-blur-sm">

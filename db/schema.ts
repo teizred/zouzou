@@ -34,3 +34,9 @@ export const sessions = pgTable('sessions', {
   createdAt: timestamp('created_at').defaultNow()
 })
 
+export const quotes = pgTable('quotes', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  text: text('text').notNull(),
+  date: text('date').notNull(),
+  createdAt: timestamp('created_at').defaultNow()
+})
