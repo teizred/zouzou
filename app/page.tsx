@@ -5,6 +5,7 @@ import ChatTab from '@/components/ChatTab'
 import DiaryTab from '@/components/DiaryTab'
 import TodoTab from '@/components/TodoTab'
 import MaybeTab from '@/components/MaybeTab'
+import InsightsTab from '@/components/InsightsTab'
 import ConfirmModal from '@/components/ConfirmModal'
 import { RefreshCwIcon } from 'lucide-react'
 
@@ -13,14 +14,18 @@ type DiaryEntry = { id: string; text: string; date: string; createdAt: string }
 type Todo = { id: string; text: string; vote: string | null; createdAt: string }
 type MaybeEntry = { id: string; text: string; createdAt: string }
 type Session = { id: string; title: string; createdAt: string }
+type MoodEntry = { id: string; value: string; note: string | null; date: string; createdAt: string }
+type SummaryEntry = { id: string; weekStart: string; content: string; createdAt: string }
 
 export default function Home() {
-  const [tab, setTab] = useState<'chat' | 'diary' | 'todo' | 'maybe'>('chat')
+  const [tab, setTab] = useState<'chat' | 'diary' | 'todo' | 'maybe' | 'insights'>('chat')
   const [messages, setMessages] = useState<Message[]>([])
   const [diary, setDiary] = useState<DiaryEntry[]>([])
   const [todos, setTodos] = useState<Todo[]>([])
   const [maybeList, setMaybeList] = useState<MaybeEntry[]>([])
   const [sessions, setSessions] = useState<Session[]>([])
+  const [moods, setMoods] = useState<MoodEntry[]>([])
+  const [summaries, setSummaries] = useState<SummaryEntry[]>([])
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [showSessions, setShowSessions] = useState(false)
   const [input, setInput] = useState('')
@@ -40,6 +45,8 @@ export default function Home() {
     fetch('/api/todos').then(r => r.json()).then(data => Array.isArray(data) && setTodos(data))
     fetch('/api/maybe').then(r => r.json()).then(data => Array.isArray(data) && setMaybeList(data))
     fetch('/api/quote').then(r => r.json()).then(data => data?.text && setQuote(data.text))
+    fetch('/api/moods').then(r => r.json()).then(data => Array.isArray(data) && setMoods(data))
+    fetch('/api/summary').then(r => r.json()).then(data => Array.isArray(data) && setSummaries(data))
     fetch('/api/sessions').then(r => r.json()).then((data) => {
       if (Array.isArray(data)) {
         setSessions(data)
@@ -343,16 +350,16 @@ export default function Home() {
           )}
         </div>
 
-        <div className="bento-card p-1.5 rounded-2xl flex gap-1 bg-white/50 backdrop-blur-sm">
-          {(['chat', 'diary', 'todo', 'maybe'] as const).map(t => (
+        <div className="bento-card p-1.5 rounded-2xl flex gap-1 bg-white/50 backdrop-blur-sm overflow-x-auto scrollbar-hide">
+          {(['chat', 'diary', 'todo', 'maybe', 'insights'] as const).map(t => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`flex-1 py-3 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all duration-200 ${
+              className={`flex-1 min-w-[70px] py-3 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all duration-200 ${
                 tab === t ? 'bg-accent text-white shadow-md shadow-accent/20' : 'text-gray-400'
               }`}
             >
-              {t === 'chat' ? 'Assistant' : t === 'diary' ? 'Journal' : t === 'todo' ? 'Tasks' : 'Maybe'}
+              {t === 'chat' ? 'Assistant' : t === 'diary' ? 'Journal' : t === 'todo' ? 'Tasks' : t === 'maybe' ? 'Maybe' : 'Insights'}
             </button>
           ))}
         </div>
@@ -408,6 +415,14 @@ export default function Home() {
               maybeInput={maybeInput}
               setMaybeInput={setMaybeInput}
               addMaybe={addMaybe}
+            />
+          )}
+          {tab === 'insights' && (
+            <InsightsTab
+              moods={moods}
+              setMoods={setMoods}
+              summaries={summaries}
+              setSummaries={setSummaries}
             />
           )}
         </div>

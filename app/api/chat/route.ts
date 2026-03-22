@@ -1,12 +1,22 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
 
+import { db } from '@/db'
+import { todos } from '@/db/schema'
+import { eq, isNull, or } from 'drizzle-orm'
+
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 export async function POST(req: NextRequest) {
   try {
     const { messages: rawMessages } = await req.json()
     const messages = rawMessages.map(({ role, content }: { role: string, content: string }) => ({ role, content }))
+
+    // Fetch pending tasks
+    const pendingTasks = await db.select().from(todos).where(or(isNull(todos.vote), eq(todos.vote, "null")))
+    const tasksContext = pendingTasks.length > 0 
+      ? `\n\nPENDING TASKS REMINDER:\nKenza currently has these unfinished tasks:\n${pendingTasks.map(t => `- ${t.text}`).join('\n')}\nIf it naturally fits the conversation, gently ask her about them or encourage her. Don't be pushy or list them like a robot.`
+      : ''
 
     const response = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
@@ -26,7 +36,7 @@ If Kenza mentioned something in a previous message — a worry, a goal, a situat
 If Kenza seems tired or it's late, suggest she winds down. Ask about her day genuinely — not just "how are you" but specific things she mentioned before.
 Read between the lines. If she says "ça va" but her messages are short or flat, gently check in. Don't force it, just leave the door open.
 When she mentions something to do → add at the end: [TODO: short task]
-Never mention these tags in your visible response.`,
+Never mention these tags in your visible response.${tasksContext}`,
       messages
     })
 

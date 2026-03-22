@@ -40,3 +40,18 @@ export const quotes = pgTable('quotes', {
   date: text('date').notNull(),
   createdAt: timestamp('created_at').defaultNow()
 })
+
+export const moods = pgTable('moods', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  value: text('value').notNull(), // e.g. '1', '2', '3', '4', '5'
+  note: text('note'),
+  date: text('date').notNull(), // store ISO date string for easy daily query
+  createdAt: timestamp('created_at').defaultNow()
+})
+
+export const weekly_summaries = pgTable('weekly_summaries', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  weekStart: text('week_start').notNull(),
+  content: text('content').notNull(),
+  createdAt: timestamp('created_at').defaultNow()
+})
