@@ -17,7 +17,7 @@ export default function ConfirmModal({ isOpen, onClose, text, onConfirm }: Confi
         <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center mb-6">
           <span className="text-2xl">⚠️</span>
         </div>
-        <h3 className="text-lg font-black text-gray-800 leading-tight mb-2">Wait Kenza!</h3>
+        <h3 className="text-lg font-black text-gray-800 leading-tight mb-2">Wait!</h3>
         <p className="text-sm font-bold text-gray-400 leading-relaxed mb-8">
           {text}<br/>
           <span className="italic">T'es sûre de vouloir supprimer ça ?</span>

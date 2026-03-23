@@ -2,13 +2,17 @@ import Anthropic from '@anthropic-ai/sdk'
 import { NextResponse } from 'next/server'
 import { db } from '@/db'
 import { quotes } from '@/db/schema'
-import { desc } from 'drizzle-orm'
+import { desc, eq } from 'drizzle-orm'
+import { getCurrentUser } from '@/lib/auth'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 export async function GET() {
   try {
-    const recent = await db.select().from(quotes).orderBy(desc(quotes.createdAt)).limit(5)
+    const user = await getCurrentUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const recent = await db.select().from(quotes).where(eq(quotes.userId, user.id)).orderBy(desc(quotes.createdAt)).limit(5)
     const recentTexts = recent.map(q => `- ${q.text}`).join('\n')
 
     const response = await client.messages.create({
@@ -26,7 +30,7 @@ Reply ONLY with the new quote, nothing else.`
     })
 
     const text = response.content[0].type === 'text' ? response.content[0].text : ''
-    await db.insert(quotes).values({ text, date: new Date().toISOString().split('T')[0] })
+    await db.insert(quotes).values({ text, date: new Date().toISOString().split('T')[0], userId: user.id })
     return NextResponse.json({ text })
   } catch (error: any) {
     console.error('QUOTE_API_ERROR:', error)

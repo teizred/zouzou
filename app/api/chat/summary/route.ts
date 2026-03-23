@@ -1,10 +1,14 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
+import { getCurrentUser } from '@/lib/auth'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 export async function POST(req: NextRequest) {
   try {
+    const user = await getCurrentUser()
+    const userName = user?.name || 'l\'utilisateur'
+    
     const { messages: rawMessages } = await req.json()
     // On ne garde que role et content
     const messages = rawMessages.map(({ role, content }: { role: string, content: string }) => ({ role, content }))
@@ -13,7 +17,7 @@ export async function POST(req: NextRequest) {
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 50,
       system: `Tu es un assistant qui génère des titres très courts et créatifs pour des conversations.
-L'utilisateur est Kenza, une jeune femme de 21 ans.
+L'utilisateur est ${userName}.
 Génère un titre de 3-4 mots maximum, sans ponctuation inutile, en mélangeant français et anglais (franglish) de manière naturelle et "cool".
 Exemple: "Planning the weekend ✨", "Session yoga matinale", "Mood du jour".
 Renvoie UNIQUEMENT le titre, rien d'autre.`,

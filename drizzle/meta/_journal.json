@@ -8,6 +8,13 @@
       "when": 1773928339917,
       "tag": "0000_superb_selene",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1774271673494,
+      "tag": "0001_cheerful_magneto",
+      "breakpoints": true
     }
   ]
 }

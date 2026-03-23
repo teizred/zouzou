@@ -1,6 +1,6 @@
 'use client'
 
-type MaybeEntry = { id: string; text: string; createdAt: string }
+type MaybeEntry = { id: string; text: string; createdAt: string; isShared: boolean }
 
 interface MaybeTabProps {
   maybeList: MaybeEntry[]
@@ -30,7 +30,7 @@ export default function MaybeTab({
         {maybeList.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center opacity-40">
             <span className="text-5xl mb-4">💭</span>
-            <p className="text-sm font-bold text-gray-400 italic">No indecision today?<br/>Bravo Kenza! ✨</p>
+            <p className="text-sm font-bold text-gray-400 italic">No indecision today?<br/>Bravo! ✨</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-5">

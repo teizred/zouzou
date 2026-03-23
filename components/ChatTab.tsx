@@ -91,7 +91,7 @@ export default function ChatTab({
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center opacity-40">
             <p className="text-sm font-bold text-gray-400">
-              Omg Kenza t'es là! 🫶 <br />Tell me everything, how's your day going?
+              Omg t'es là! 🫶 <br />Tell me everything, how's your day going?
             </p>
           </div>
         )}

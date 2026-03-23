@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Kenza's Personal Space",
-  description: "Kenza's Personal Space",
+  title: "Your Personal Space",
+  description: "Your Personal Space",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

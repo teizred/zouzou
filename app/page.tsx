@@ -7,17 +7,22 @@ import TodoTab from '@/components/TodoTab'
 import MaybeTab from '@/components/MaybeTab'
 import InsightsTab from '@/components/InsightsTab'
 import ConfirmModal from '@/components/ConfirmModal'
+import CoupleInvite from '@/components/CoupleInvite'
 import { RefreshCwIcon } from 'lucide-react'
+import { authClient } from '@/lib/auth-client'
+import { useRouter } from 'next/navigation'
 
 type Message = { role: 'user' | 'assistant'; content: string }
 type DiaryEntry = { id: string; text: string; date: string; createdAt: string }
-type Todo = { id: string; text: string; vote: string | null; createdAt: string }
-type MaybeEntry = { id: string; text: string; createdAt: string }
+type Todo = { id: string; text: string; vote: string | null; createdAt: string; isShared: boolean }
+type MaybeEntry = { id: string; text: string; createdAt: string; isShared: boolean }
 type Session = { id: string; title: string; createdAt: string }
 type MoodEntry = { id: string; value: string; note: string | null; date: string; createdAt: string }
 type SummaryEntry = { id: string; weekStart: string; content: string; createdAt: string }
 
 export default function Home() {
+  const [space, setSpace] = useState<'personal' | 'shared'>('personal')
+  const [coupleStatus, setCoupleStatus] = useState<any>(null)
   const [tab, setTab] = useState<'chat' | 'diary' | 'todo' | 'maybe' | 'insights'>('chat')
   const [messages, setMessages] = useState<Message[]>([])
   const [diary, setDiary] = useState<DiaryEntry[]>([])
@@ -40,7 +45,15 @@ export default function Home() {
   const [confirmText, setConfirmText] = useState('')
   const [quote, setQuote] = useState<string>('')
 
+  const refreshCoupleStatus = async () => {
+    try {
+      const { couple } = await fetch('/api/couple/status').then(r => r.json())
+      setCoupleStatus(couple)
+    } catch {}
+  }
+
   useEffect(() => {
+    refreshCoupleStatus()
     fetch('/api/diary').then(r => r.json()).then(data => Array.isArray(data) && setDiary(data))
     fetch('/api/todos').then(r => r.json()).then(data => Array.isArray(data) && setTodos(data))
     fetch('/api/maybe').then(r => r.json()).then(data => Array.isArray(data) && setMaybeList(data))
@@ -57,6 +70,16 @@ export default function Home() {
       }
     })
   }, [])
+  const { data: session, isPending } = authClient.useSession()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!isPending && !session) {
+      router.push('/login')
+    }
+  }, [session, isPending])
+
+  if (isPending || !session) return null
 
   const newSession = async () => {
     const res = await fetch('/api/sessions', {
@@ -81,8 +104,8 @@ export default function Home() {
   }
 
   const parseResponse = async (text: string) => {
-    const diaryMatch = text.match(/\[DIARY:\s*(.+?)\]/)
-    const todoMatch = text.match(/\[TODO:\s*(.+?)\]/)
+    const diaryMatch = text.match(/\[DIARY:\s*(.+?)\]/i)
+    const todoMatch = text.match(/\[TODO:\s*(.+?)\]/i)
 
     if (diaryMatch) {
       const res = await fetch('/api/diary', {
@@ -98,13 +121,13 @@ export default function Home() {
       const res = await fetch('/api/todos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: todoMatch[1].trim() })
+        body: JSON.stringify({ text: todoMatch[1].trim(), isShared: false }) // Chat adds to personal
       })
       const saved = await res.json()
       setTodos(prev => [...prev, saved])
     }
 
-    return text.replace(/\[DIARY:.*?\]/g, '').replace(/\[TODO:.*?\]/g, '').trim()
+    return text.replace(/\[DIARY:.*?\]/gi, '').replace(/\[TODO:.*?\]/gi, '').trim()
   }
 
   const sendMessage = async () => {
@@ -192,7 +215,7 @@ export default function Home() {
     const res = await fetch('/api/todos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: todoInput.trim() })
+      body: JSON.stringify({ text: todoInput.trim(), isShared: space === 'shared' })
     })
     const saved = await res.json()
     if (saved?.id) {
@@ -263,7 +286,7 @@ export default function Home() {
     const res = await fetch('/api/maybe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: maybeInput.trim() })
+      body: JSON.stringify({ text: maybeInput.trim(), isShared: space === 'shared' })
     })
     const saved = await res.json()
     setMaybeList(prev => [saved, ...prev])
@@ -288,7 +311,7 @@ export default function Home() {
     const res = await fetch('/api/todos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: item.text })
+      body: JSON.stringify({ text: item.text, isShared: item.isShared })
     })
     const saved = await res.json()
     setTodos(prev => [...prev, saved])
@@ -325,16 +348,35 @@ export default function Home() {
     setConfirmOpen(true)
   }
 
+  const filteredTodos = todos.filter(t => space === 'shared' ? t.isShared : !t.isShared)
+  const filteredMaybe = maybeList.filter(m => space === 'shared' ? m.isShared : !m.isShared)
+  const tabs = space === 'shared' ? (['todo', 'maybe'] as const) : (['chat', 'diary', 'todo', 'maybe', 'insights'] as const)
+
   return (
     <main className="min-h-screen py-10 px-4 flex justify-center items-start">
       <div className="w-full max-w-lg flex flex-col gap-6">
         <div className="flex flex-col items-center text-center">
           <div className="w-16 h-16 bg-accent rounded-3xl flex items-center justify-center shadow-lg shadow-accent/20 mb-4 animate-in fade-in zoom-in duration-500">
-            <span className="text-3xl">✨</span>
+            <span className="text-3xl">{space === 'shared' ? '✌️' : '✨'}</span>
           </div>
-          <h1 className="text-2xl font-black text-foreground tracking-tight">Hi, Kenza</h1>
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Personal Space</p>
-          {quote && (
+          <h1 className="text-2xl font-black text-foreground tracking-tight">Hi, {session.user?.name || 'there'}</h1>
+          
+          <div className="flex bg-gray-100/80 backdrop-blur-sm rounded-xl p-1 mt-3 mx-auto shadow-inner">
+            <button 
+              onClick={() => { setSpace('personal'); setTab('maybe') }} 
+              className={`px-4 py-1.5 text-xs font-black uppercase tracking-wider rounded-lg transition-all duration-300 ${space === 'personal' ? 'bg-white shadow-sm text-accent' : 'text-gray-400 hover:text-gray-600'}`}
+            >
+              Personal Space
+            </button>
+            <button 
+              onClick={() => { setSpace('shared'); setTab('maybe') }} 
+              className={`px-4 py-1.5 text-xs font-black uppercase tracking-wider rounded-lg transition-all duration-300 ${space === 'shared' ? 'bg-white shadow-sm text-violet-500' : 'text-gray-400 hover:text-gray-600'}`}
+            >
+              Our Maybe List
+            </button>
+          </div>
+
+          {space === 'personal' && quote && (
             <div className="mt-3 px-4 py-3 bg-accent/5 rounded-2xl max-w-sm relative group">
               <p className="text-xs font-medium text-accent/80 leading-relaxed text-center italic">
                 "{quote}"
@@ -350,13 +392,13 @@ export default function Home() {
           )}
         </div>
 
-        <div className="bento-card p-1.5 rounded-2xl flex gap-1 bg-white/50 backdrop-blur-sm overflow-x-auto scrollbar-hide">
-          {(['chat', 'diary', 'todo', 'maybe', 'insights'] as const).map(t => (
+        <div className={`bento-card p-1.5 rounded-2xl flex gap-1 bg-white/50 backdrop-blur-sm overflow-x-auto scrollbar-hide ${space === 'shared' && (!coupleStatus || coupleStatus.status !== 'accepted') ? 'hidden' : ''}`}>
+          {tabs.map(t => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className={`flex-1 min-w-[70px] py-3 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all duration-200 ${
-                tab === t ? 'bg-accent text-white shadow-md shadow-accent/20' : 'text-gray-400'
+                tab === t ? (space === 'shared' ? 'bg-violet-500 text-white shadow-md shadow-violet-500/20' : 'bg-accent text-white shadow-md shadow-accent/20') : 'text-gray-400'
               }`}
             >
               {t === 'chat' ? 'Assistant' : t === 'diary' ? 'Journal' : t === 'todo' ? 'Tasks' : t === 'maybe' ? 'Maybe' : 'Insights'}
@@ -366,8 +408,13 @@ export default function Home() {
 
         <div className={`bento-card rounded-[2.5rem] p-6 flex flex-col h-[550px] transition-all duration-700 ${
           tab === 'maybe' ? 'shadow-[0_20px_60px_-15px_rgba(56,189,248,0.15)] ring-1 ring-sky-50' : ''
-        }`}>
-          {tab === 'chat' && (
+        } ${space === 'shared' ? 'ring-1 ring-violet-50 shadow-[0_20px_60px_-15px_rgba(139,92,246,0.15)] bg-linear-to-b from-white to-violet-50/30' : ''}`}>
+
+          {space === 'shared' && (!coupleStatus || coupleStatus.status !== 'accepted') ? (
+            <CoupleInvite status={coupleStatus} refresh={refreshCoupleStatus} />
+          ) : (
+            <>
+              {tab === 'chat' && (
             <ChatTab
               messages={messages}
               loading={loading}
@@ -397,26 +444,26 @@ export default function Home() {
               updateDiaryEntry={updateDiaryEntry}
             />
           )}
-          {tab === 'todo' && (
-            <TodoTab
-              todos={todos}
-              vote={vote}
-              removeTodo={removeTodo}
-              todoInput={todoInput}
-              setTodoInput={setTodoInput}
-              addTodo={addTodo}
-            />
-          )}
-          {tab === 'maybe' && (
-            <MaybeTab
-              maybeList={maybeList}
-              moveToTodo={moveToTodo}
-              removeMaybe={removeMaybe}
-              maybeInput={maybeInput}
-              setMaybeInput={setMaybeInput}
-              addMaybe={addMaybe}
-            />
-          )}
+              {tab === 'todo' && (
+                <TodoTab
+                  todos={filteredTodos}
+                  vote={vote}
+                  removeTodo={removeTodo}
+                  todoInput={todoInput}
+                  setTodoInput={setTodoInput}
+                  addTodo={addTodo}
+                />
+              )}
+              {tab === 'maybe' && (
+                <MaybeTab
+                  maybeList={filteredMaybe}
+                  moveToTodo={moveToTodo}
+                  removeMaybe={removeMaybe}
+                  maybeInput={maybeInput}
+                  setMaybeInput={setMaybeInput}
+                  addMaybe={addMaybe}
+                />
+              )}
           {tab === 'insights' && (
             <InsightsTab
               moods={moods}
@@ -424,6 +471,8 @@ export default function Home() {
               summaries={summaries}
               setSummaries={setSummaries}
             />
+              )}
+            </>
           )}
         </div>
 

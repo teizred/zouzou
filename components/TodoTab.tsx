@@ -1,6 +1,6 @@
 'use client'
 
-type Todo = { id: string; text: string; vote: string | null; createdAt: string }
+type Todo = { id: string; text: string; vote: string | null; createdAt: string; isShared: boolean }
 
 interface TodoTabProps {
   todos: Todo[]
