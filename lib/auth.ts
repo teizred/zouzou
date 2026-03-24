@@ -9,6 +9,11 @@ export const auth = betterAuth({
   }),
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL,
+  rateLimit: {
+    retryAfter: 0,
+    window: 60,
+    max: 100
+  },
   emailAndPassword: {
     enabled: true
   },
