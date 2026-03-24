@@ -6,11 +6,12 @@ import { headers } from 'next/headers'
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
-    provider: "pg", // or "mysql", "sqlite"
+    provider: "pg",
+    usePlural: true,
     schema: {
       ...schema
     }
-  }),
+}),
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL,
   rateLimit: {
