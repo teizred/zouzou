@@ -7,7 +7,6 @@ import { headers } from 'next/headers'
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
-    usePlural: true,
     schema: {
       ...schema
     }
